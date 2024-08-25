@@ -40,8 +40,6 @@ pub(crate) unsafe fn init(config: Config) {
         (Some(pllmul as u8 - 2), pllsrcclk * pllmul)
     };
 
-    assert!(real_sysclk <= 72_000_000);
-
     let hpre_bits = config
         .hclk
         .map(|hclk| match real_sysclk / hclk.0 {
@@ -64,8 +62,6 @@ pub(crate) unsafe fn init(config: Config) {
         real_sysclk / (1 << (hpre_bits - 0b0111))
     };
 
-    assert!(hclk <= 72_000_000);
-
     let ppre1_bits = config
         .pclk1
         .map(|pclk1| match hclk / pclk1.0 {
@@ -82,8 +78,6 @@ pub(crate) unsafe fn init(config: Config) {
     let pclk1 = hclk / u32::try_from(ppre1).unwrap();
     let timer_mul1 = if ppre1 == 1 { 1 } else { 2 };
 
-    assert!(pclk1 <= 36_000_000);
-
     let ppre2_bits = config
         .pclk2
         .map(|pclk2| match hclk / pclk2.0 {
@@ -99,8 +93,6 @@ pub(crate) unsafe fn init(config: Config) {
     let ppre2 = 1 << (ppre2_bits - 0b011);
     let pclk2 = hclk / u32::try_from(ppre2).unwrap();
     let timer_mul2 = if ppre2 == 1 { 1 } else { 2 };
-
-    assert!(pclk2 <= 72_000_000);
 
     FLASH.acr().write(|w| {
         w.set_latency(if real_sysclk <= 24_000_000 {
@@ -136,8 +128,6 @@ pub(crate) unsafe fn init(config: Config) {
 
     let apre = (apre_bits + 1) << 1;
     let adcclk = pclk2 / unwrap!(u32::try_from(apre));
-
-    assert!(adcclk <= 14_000_000);
 
     if config.hse.is_some() {
         // enable HSE and wait for it to be ready
